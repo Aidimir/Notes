@@ -11,6 +11,11 @@ class ViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        let notesController = NotesViewController()
+        addChild(notesController)
+        notesController.view.frame = view.safeAreaLayoutGuide.layoutFrame
+        view.addSubview(notesController.view)
+        notesController.didMove(toParent: self)
     }
 
 
