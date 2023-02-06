@@ -7,29 +7,78 @@
 
 import Foundation
 import UIKit
+import SnapKit
 
 class NotesTableViewCell: UITableViewCell {
-    public func setup(model: NotesCellProtocol) {
-        textLabel?.numberOfLines = 0
-        detailTextLabel?.numberOfLines = 0
-        textLabel?.font = .mediumSizeBoldFont
-        detailTextLabel?.font = .smallSizeFont
-        detailTextLabel?.textColor = .gray
-        textLabel?.text = model.title
+    
+    private enum Constants {
+        static let horizontalPadding = 10
         
-        var formattedDate = model.date.formatted(date: .abbreviated, time: .shortened)
-        
-        let mainImgName = {
-            var res = model.images.sorted(by: { $0.key.location < $1.key.location })
-            return res.first?.value
+        static let verticalPadding = 10
+    }
+    
+    private var titleLabel: UILabel!
+    
+    private var descriptionLabel: UILabel!
+    
+    private var cellImageView: UIImageView!
+    
+    public func setup(model: CellModelProtocol, imageManager: ImageManagerProtocol? = nil) {
+        titleLabel = {
+            let label = UILabel()
+            label.textAlignment = .left
+            label.font = .mediumSizeBoldFont
+            label.textColor = .black
+            label.lineBreakMode = .byCharWrapping
+            label.text = model.title
+            return label
         }()
         
-        // let imageData = DataManager.shared.fetchImage(imageId: mainImgName)
-        // let image = UIImage(data: imageData)
-        // self.imageView?.image = model.images
+        descriptionLabel = {
+            let label = UILabel()
+            label.textAlignment = .left
+            label.font = .smallSizeFont
+            label.textColor = .gray
+            label.lineBreakMode = .byCharWrapping
+            let dateStr = model.date?.getFormattedDate(format: "MM-dd") ?? ""
+            label.text = dateStr + " " + (model.descriptionText ?? "")
+            return label
+        }()
+        
+        cellImageView = {
+            let imgView = UIImageView()
+            imgView.contentMode = .scaleAspectFill
+            imgView.backgroundColor = .lightGray
+            imgView.layer.cornerRadius = 20
+            imgView.clipsToBounds = true
+            //            imgView.image = imageManager?.fetchImage(text: model.image)
+            return imgView
+        }()
         
         
-        detailTextLabel?.text = formattedDate + " " + (model.description ?? " ")
+        contentView.addSubview(titleLabel)
+        titleLabel.snp.makeConstraints { make in
+            make.left.top.equalToSuperview()
+            make.width.equalToSuperview().multipliedBy(0.8)
+        }
+        
+        contentView.addSubview(descriptionLabel)
+        descriptionLabel.snp.makeConstraints { make in
+            make.left.right.equalTo(titleLabel)
+            make.top.equalTo(titleLabel.snp.bottom).offset(Constants.verticalPadding)
+            make.bottom.equalToSuperview()
+        }
+        
+        contentView.addSubview(cellImageView)
+        cellImageView.snp.makeConstraints { make in
+            make.left.equalTo(titleLabel.snp.right).offset(Constants.horizontalPadding)
+            make.top.bottom.right.equalToSuperview()
+        }
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        contentView.frame = contentView.readableContentGuide.layoutFrame
     }
 }
 

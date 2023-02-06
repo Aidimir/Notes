@@ -7,11 +7,25 @@
 
 import Foundation
 import RxRelay
+import RxSwift
 
-class NotesViewModel {
-    public let notes: BehaviorRelay<[Note]> = BehaviorRelay(value: [Note]())
+protocol ContentViewModelProtocol {
+    var items: BehaviorRelay<[CellModelProtocol]> { get }
+    func fetchDataByName(name: String)
+}
+
+class NotesViewModel: ContentViewModelProtocol {
     
-    public func fetchNotes(text: String) {
-        //
+    private lazy var notes = [Note]()
+    
+    public let items: RxRelay.BehaviorRelay<[CellModelProtocol]> = BehaviorRelay(value: [NoteCellModel]())
+    
+    private let disposeBag = DisposeBag()
+    
+    public func fetchDataByName(name: String) {
+        let note = Note(images: [NSRange : String](), title: "TEST", descriptionText: "Description", date: Date(), text: "", textParameters: [NSRange : TextParameter](), currentParameters: TextParameter(), id: UUID())
+//        notes = [note,note,note,note,note,note]
+        notes.append(note)
+        items.accept(notes.map(NoteCellModel.init))
     }
 }

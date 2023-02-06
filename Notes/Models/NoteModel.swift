@@ -7,19 +7,34 @@
 
 import Foundation
 
-protocol NotesCellProtocol {
+protocol CellModelProtocol {
     var title: String { get }
-    var images: [NSRange: String] { get }
-    var description: String? { get }
-    var date: Date { get }
+    var image: String? { get }
+    var descriptionText: String? { get }
+    var date: Date? { get }
 }
 
-struct Note: NotesCellProtocol {
+struct Note: Codable {
     var images: [NSRange: String]
     var title: String
-    var description: String?
+    var descriptionText: String?
     var date: Date
     var text: String
     var textParameters: [NSRange: TextParameter]
     var currentParameters: TextParameter
+    var id: UUID
+}
+
+struct NoteCellModel: CellModelProtocol {
+    var title: String
+    var image: String?
+    var descriptionText: String?
+    var date: Date?
+    
+    init(note: Note) {
+        self.title = note.title
+        self.image = note.images.first?.value
+        self.descriptionText = note.descriptionText
+        self.date = note.date
+    }
 }

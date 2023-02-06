@@ -11,11 +11,13 @@ import UIKit
 extension UIFont {
     public static let titleFont = UIFont.systemFont(ofSize: 24, weight: .semibold)
     
-    public static let mediumSizeBoldFont = UIFont.systemFont(ofSize: 20, weight: .semibold)
+    public static let mediumSizeBoldFont = UIFont.systemFont(ofSize: 20, weight: .bold)
     
-    public static let mediumSizeFont = UIFont.systemFont(ofSize: 20, weight: .medium)
+    public static let mediumSizeFont = UIFont.systemFont(ofSize: 20, weight: .semibold)
     
-    public static let smallSizeFont = UIFont.systemFont(ofSize: 15, weight: .medium)
+    public static let smallSizeFont = UIFont.systemFont(ofSize: 15, weight: .semibold)
+    
+    public static let smallSizeBoldFont = UIFont.systemFont(ofSize: 15, weight: .bold)
 }
 
 extension UITextField {
@@ -54,4 +56,34 @@ extension UIColor {
     public static let textFieldLightGray = UIColor(red: 0.248, green: 0.247, blue: 0.248, alpha: 0.2)
     
     public static let lightImageBackgroundGray = UIColor(red: 0.255, green: 0.255, blue: 0.255, alpha: 0.2)
+}
+
+extension Date {
+    //    yyyy-MM-dd
+    func getFormattedDate(format: String) -> String {
+        let dateformat = DateFormatter()
+        dateformat.dateFormat = format
+        return dateformat.string(from: self)
+    }
+}
+
+extension String {
+    func getDate(format: String) -> Date? {
+        let dateFormatterGet = DateFormatter()
+        dateFormatterGet.dateFormat = format
+
+        return dateFormatterGet.date(from: self)
+    }
+}
+
+extension Encodable {
+    func saveAsJsonData() -> Data? {
+        do {
+            let encoded = try JSONEncoder().encode(self)
+            return encoded
+        } catch {
+            print(error)
+            return nil
+        }
+    }
 }

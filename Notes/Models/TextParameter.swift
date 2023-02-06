@@ -9,7 +9,7 @@ import Foundation
 import UIKit
 import CoreData
 
-public class TextParameter: NSManagedObject {
+public class TextParameter: Codable {
     var fontName = "TimesNewRomanPS-ItalicMT"
     var fontSize = 20
 }
