@@ -75,8 +75,7 @@ class NotesViewModel: ContentViewModelProtocol {
     func fetchItems() {
         let dMAllData = notesDataManager.fetchAllData()
         if dMAllData?.isEmpty ?? true || dMAllData == nil {
-            let note = Note(images: [NSRange: UUID](),
-                            title: "My first note",
+            let note = Note(title: "My first note",
                             descriptionText: "",
                             date: Date(),
                             text: "My first note",

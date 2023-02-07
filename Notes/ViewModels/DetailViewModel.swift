@@ -34,14 +34,6 @@ class DetailViewModel: DetailViewModelProtocol {
     private var note: Note?
     
     func didTapOnReadyButton() {
-        var imgs = [NSRange: UUID]()
-//        images.value?.forEach({ key, value in
-//            let img = imageManager.fetchByDataOrSave(data: value.pngData())
-//            if img.1 != nil {
-//                imgs[key] = img.1
-//            }
-//        })
-        
         let oldText = note?.text
         
         if var note = note {
@@ -49,16 +41,6 @@ class DetailViewModel: DetailViewModelProtocol {
                 notesDataManager.removeData(id: note.id)
                 return 
             }
-            var imgs = [NSRange: UUID]()
-            
-//            images.value?.forEach({ key, value in
-//                let img = imageManager.fetchByDataOrSave(data: value.pngData())
-//                if img.1 != nil {
-//                    imgs[key] = img.1
-//                }
-//            })
-            
-            note.images = imgs
             
             if note.text != oldText {
                 note.date = Date()
@@ -71,8 +53,7 @@ class DetailViewModel: DetailViewModelProtocol {
             notesDataManager.saveData(data: note, id: note.id)
         } else {
             if !text.value.isEmpty {
-                note = Note(images: imgs,
-                            title: "NEW NOTE",
+                note = Note(title: "NEW NOTE",
                             descriptionText: text.value,
                             date: Date(),
                             text: text.value,

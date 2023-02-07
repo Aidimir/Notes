@@ -51,8 +51,8 @@ class NotesTableViewCell: UITableViewCell {
             imgView.backgroundColor = .lightGray
             imgView.layer.cornerRadius = 20
             imgView.clipsToBounds = true
-            if let imgId = model.image {
-                imgView.image = imageManager?.fetchImage(id: imgId)
+            if let imgData = model.image {
+                imgView.image = UIImage(data: imgData)
             }
             return imgView
         }()

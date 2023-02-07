@@ -12,7 +12,7 @@ import RxSwift
 import RxCocoa
 
 protocol NotesViewProtocol {
-    init(imageManager: ImageManagerProtocol)
+    var viewModel: ContentViewModelProtocol? { get }
 }
 
 class NotesViewController: UIViewController, NotesViewProtocol {
@@ -26,7 +26,7 @@ class NotesViewController: UIViewController, NotesViewProtocol {
     
     private let disposeBag = DisposeBag()
     
-    public var viewModel: NotesViewModel?
+    public var viewModel: ContentViewModelProtocol?
     
     private let tableView = UITableView()
     

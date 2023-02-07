@@ -39,7 +39,7 @@ class MainBuilder: MainBuilderProtocol {
         
         let imagePicker = ImagePickerViewController(router: router)
         
-        let detailViewController = DetailViewController(imageManager: imageManager, imagePickerController: imagePicker)
+        let detailViewController = DetailViewController(imagePickerController: imagePicker)
         
         let viewModel = DetailViewModel(notesDataManager: dataManager, router: router, note: data, imageManager: imageManager)
         detailViewController.viewModel = viewModel
