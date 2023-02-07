@@ -69,6 +69,7 @@ class DetailViewModel: DetailViewModelProtocol {
             if !text.value.isEmpty {
                 note = Note(images: imgs,
                             title: "NEW NOTE",
+                            descriptionText: text.value,
                             date: Date(),
                             text: text.value,
                             textParameters: [NSRange : TextParameter](),

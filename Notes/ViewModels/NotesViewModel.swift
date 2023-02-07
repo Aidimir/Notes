@@ -33,17 +33,19 @@ class NotesViewModel: ContentViewModelProtocol {
         if name.isEmpty {
             fetchItems()
         } else {
-            items.accept(items.value.filter({ cellModel in
-                if let model = cellModel as? NoteCellModel {
-                    if model.title.lowercased().contains(name.lowercased()) || ((model.descriptionText?.lowercased().contains(name.lowercased())) ?? false) {
-                        return true
-                    }
-                }
-                return false
-            })
-            )
+            items.accept(fetchFilteredData(name: name))
         }
-//        items.accept(notes.map(NoteCellModel.init))
+    }
+    
+    private func fetchFilteredData(name: String) -> [NoteCellModel] {
+        var res = [NoteCellModel]()
+        res = notes.filter { model in
+            if model.title.lowercased().contains(name.lowercased()) || ((model.descriptionText?.lowercased().contains(name.lowercased())) ?? false) {
+                return true
+            }
+            return false
+        }.map(NoteCellModel.init)
+        return res
     }
     
     required init(notesDataManager: NotesDataManagerProtocol, router: MainPageRouterProtocol) {
@@ -57,13 +59,16 @@ class NotesViewModel: ContentViewModelProtocol {
     }
     
     func didTapOnRow(indexPath: IndexPath) {
-        router.moveToDetailViewController(data: notes[indexPath.row])
+        var neededCell = items.value[indexPath.row] as! NoteCellModel
+        let neededNote = notes.filter({ $0.id == neededCell.id }).first
+        router.moveToDetailViewController(data: neededNote)
     }
     
     func removeElement(indexPath: IndexPath) {
-        let element = notes[indexPath.row]
-        notesDataManager.removeData(id: element.id)
-        notes.remove(at: indexPath.row)
+        var neededCell = items.value[indexPath.row] as! NoteCellModel
+        let neededNote = notes.filter({ $0.id == neededCell.id }).first
+        notesDataManager.removeData(id: neededNote!.id)
+        notes.removeAll(where: { $0.id == neededNote?.id })
         items.accept(notes.map(NoteCellModel.init))
     }
     
