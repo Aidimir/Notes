@@ -13,6 +13,7 @@ protocol DetailViewModelProtocol {
 //    var images: BehaviorRelay<[NSRange: UIImage]?> { get set }
     //    var parameters: BehaviorRelay<[NSRange: TextParameter]>
     var attributedStringData: BehaviorRelay<Data?> { get }
+    var mainImage: Data? { get set }
     func didTapOnReadyButton()
     init(notesDataManager: NotesDataManagerProtocol, router: MainPageRouterProtocol, note: Note?, imageManager: ImageManagerProtocol)
 }
@@ -24,6 +25,8 @@ class DetailViewModel: DetailViewModelProtocol {
 //    var images: RxRelay.BehaviorRelay<[NSRange: UIImage]?> = BehaviorRelay(value: nil)
     
     var text: RxRelay.BehaviorRelay<String> = BehaviorRelay(value: "")
+    
+    var mainImage: Data?
     
     private let notesDataManager: NotesDataManagerProtocol
     
@@ -49,6 +52,7 @@ class DetailViewModel: DetailViewModelProtocol {
             note.text = text.value
             note.attributedText = attributedStringData.value
             note.title = "NEW NOTE"
+            note.image = mainImage
             note.descriptionText = text.value
             notesDataManager.saveData(data: note, id: note.id)
         } else {
@@ -58,7 +62,7 @@ class DetailViewModel: DetailViewModelProtocol {
                             date: Date(),
                             text: text.value,
                             attributedText: attributedStringData.value,
-//                            textParameters: [NSRange : TextParameter](),
+                            image: mainImage,
                             currentParameters: TextParameter(),
                             id: UUID())
                 
@@ -72,6 +76,7 @@ class DetailViewModel: DetailViewModelProtocol {
         self.router = router
         self.note = note
         self.imageManager = imageManager
+        self.mainImage = note?.image
         
         if note != nil {
             text.accept(note?.text ?? "")

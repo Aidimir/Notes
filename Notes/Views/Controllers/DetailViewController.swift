@@ -95,45 +95,31 @@ class DetailViewController: UIViewController, DetailViewProtocol {
         guard let viewModel = viewModel else { return }
         textView.rx.text.orEmpty.bind(to: viewModel.text).disposed(by: disposeBag)
         
-        textView.rx.text.subscribe { str in
+        textView.rx.text.throttle(.milliseconds(500), scheduler: MainScheduler()).subscribe { str in
             viewModel.didTapOnReadyButton()
         }.disposed(by: disposeBag)
 
         
         imagePickerController.chosenImages.filter({ $0 != nil }).subscribe { [weak self] image in
             guard let self = self else { return }
-            //            var oldValues = self?.viewModel?.images.value
-            //            oldValues?[self?.textView.selectedRange ?? NSRange()] = image!
-//            let attributedString = NSMutableAttributedString(string: (self?.textView.text) ?? "")
             let attributedString = NSMutableAttributedString(attributedString: self.textView.attributedText!)
             let textAttachment = NSTextAttachment()
             textAttachment.image = image
             
             let oldWidth = textAttachment.image!.size.width;
             
-            let scaleFactor = oldWidth / (self.textView.frame.size.width) - 10; //for the padding inside the textView
+            let scaleFactor = oldWidth / (self.textView.frame.size.width); //for the padding inside the textView
             textAttachment.image = UIImage(cgImage: textAttachment.image!.cgImage!, scale: scaleFactor, orientation: .up)
             
             let aspect = textAttachment.image!.size.width / textAttachment.image!.size.height
             textAttachment.bounds = CGRect(x: 0, y: 0, width: self.view.frame.width, height: self.view.frame.width / aspect )
             
-//            let width = self.textView.frame.size.width
-//            let textViewAsAny: Any = self.textView!
-//
-//            self.textView.attributedText.enumerateAttribute(NSAttributedString.Key.attachment, in: NSRange(location: 0, length: self.textView.attributedText.length), options: [], using: { [width] (object, range, pointer) in
-//                textAttachment.image(forBounds: self.textView.bounds, textContainer: textViewAsAny as? NSTextContainer, characterIndex: range.location)
-//            })
-            
             let attrStringWithImage = NSAttributedString(attachment: textAttachment)
             attributedString.replaceCharacters(in: (self.textView.selectedRange), with: attrStringWithImage)
-            //            var range = self?.textView.selectedRange
-            //            range?.location = (range?.location ?? 0) + 1
-            //            attributedString.replaceCharacters(in: (self?.textView.selectedRange)! , with: attrStringWithImage)
             self.textView.attributedText = attributedString;
             self.textView.font = .mediumSizeBoldFont
-            self.prepareTextImages()
+            self.setImageAsMain()
             self.textView.reloadInputViews()
-            //            self?.viewModel?.images.accept(oldValues)
         }.disposed(by: disposeBag)
     }
     
@@ -153,7 +139,10 @@ class DetailViewController: UIViewController, DetailViewProtocol {
     
     private func prepareTextImages() {
         let width = CGRectGetWidth(self.view.frame)
-        textView.attributedText.enumerateAttribute(NSAttributedString.Key.attachment, in: NSRange(location: 0, length: textView!.attributedText.length), options: [], using: { [width] (object, range, pointer) in
+        
+        setImageAsMain()
+        
+        textView.attributedText.enumerateAttribute(.attachment, in: NSRange(location: 0, length: textView!.attributedText.length), options: [], using: { [width] (object, range, pointer) in
             let textViewAsAny: Any = self.textView!
             if let attachment = object as? NSTextAttachment,
                let img = attachment.image(forBounds: self.textView.bounds, textContainer: textViewAsAny as? NSTextContainer, characterIndex: range.location) {
@@ -168,5 +157,15 @@ class DetailViewController: UIViewController, DetailViewProtocol {
                 }
             }
         })
+    }
+    
+    private func setImageAsMain() {
+        var isFirst = false
+        textView.attributedText.enumerateAttribute(.attachment, in: NSRange(location: 0, length: textView.attributedText.length)) { object, range, pointer in
+            if let atachment = object as? NSTextAttachment, let img = atachment.image(forBounds: self.textView.bounds, textContainer: textView as! Any as? NSTextContainer, characterIndex: range.location), !isFirst {
+                viewModel?.mainImage = img.pngData()
+                isFirst = true
+            }
+        }
     }
 }
