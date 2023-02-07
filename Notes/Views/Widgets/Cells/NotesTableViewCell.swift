@@ -40,7 +40,7 @@ class NotesTableViewCell: UITableViewCell {
             label.font = .smallSizeFont
             label.textColor = .gray
             label.lineBreakMode = .byCharWrapping
-            let dateStr = model.date?.getFormattedDate(format: "dd MMMM") ?? ""
+            let dateStr = model.date?.getFormattedDate(format: "dd MMMM YYYY") ?? ""
             label.text = dateStr + " " + (model.descriptionText ?? "")
             return label
         }()
@@ -56,7 +56,6 @@ class NotesTableViewCell: UITableViewCell {
             }
             return imgView
         }()
-        
         
         contentView.addSubview(titleLabel)
         titleLabel.snp.makeConstraints { make in
@@ -81,6 +80,13 @@ class NotesTableViewCell: UITableViewCell {
     override func layoutSubviews() {
         super.layoutSubviews()
         contentView.frame = contentView.readableContentGuide.layoutFrame
+    }
+    
+    override func prepareForReuse() {
+        titleLabel.removeFromSuperview()
+        cellImageView.removeFromSuperview()
+        descriptionLabel.removeFromSuperview()
+        super.prepareForReuse()
     }
 }
 
