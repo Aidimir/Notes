@@ -88,11 +88,25 @@ extension Encodable {
     }
 }
 
-extension NSTextAttachment {
-    func setImageHeight(height: CGFloat) {
-        guard let image = image else { return }
-        let ratio = image.size.width / image.size.height
-
-        bounds = CGRect(x: bounds.origin.x, y: bounds.origin.y, width: ratio * height, height: height)
+extension String {
+    var firstNotEmptyLine: String? {
+        for i in self.components(separatedBy: .newlines) {
+            if !i.isEmpty {
+                return i
+            }
+        }
+        return nil
+    }
+    
+    var secondNotEmptyLine: String? {
+        let first = firstNotEmptyLine
+        var pattern = "^\\s*$"
+        print(self)
+        for i in self.components(separatedBy: .newlines) {
+            if !i.isEmpty && i != first{
+                return i
+            }
+        }
+        return first
     }
 }

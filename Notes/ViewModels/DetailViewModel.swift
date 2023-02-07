@@ -21,9 +21,7 @@ protocol DetailViewModelProtocol {
 class DetailViewModel: DetailViewModelProtocol {
     
     var attributedStringData: RxRelay.BehaviorRelay<Data?> = BehaviorRelay(value: nil)
-    
-//    var images: RxRelay.BehaviorRelay<[NSRange: UIImage]?> = BehaviorRelay(value: nil)
-    
+        
     var text: RxRelay.BehaviorRelay<String> = BehaviorRelay(value: "")
     
     var mainImage: Data?
@@ -51,14 +49,14 @@ class DetailViewModel: DetailViewModelProtocol {
             
             note.text = text.value
             note.attributedText = attributedStringData.value
-            note.title = "NEW NOTE"
+            note.title = text.value.firstNotEmptyLine ?? ""
             note.image = mainImage
-            note.descriptionText = text.value
+            note.descriptionText = text.value.secondNotEmptyLine ?? ""
             notesDataManager.saveData(data: note, id: note.id)
         } else {
             if !text.value.isEmpty {
-                note = Note(title: "NEW NOTE",
-                            descriptionText: text.value,
+                note = Note(title: text.value.firstNotEmptyLine ?? "",
+                            descriptionText: text.value.secondNotEmptyLine ?? "",
                             date: Date(),
                             text: text.value,
                             attributedText: attributedStringData.value,
