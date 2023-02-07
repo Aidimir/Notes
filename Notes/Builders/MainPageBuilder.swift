@@ -15,16 +15,13 @@ protocol MainBuilderProtocol {
 }
 
 class MainBuilder: MainBuilderProtocol {
-    private enum ApiConstants {
-        static var apiLink: String = "https://newsapi.org/v2/everything?&"
-        static var apiKey: String = "b0ef93b6103243fc944f889ab5c52567"
-    }
     
     func createMainPage(router: MainPageRouterProtocol) -> UIViewController {
-//        let imageDownloadService = ImageDownloadService.shared
         let appDelegate = UIApplication.shared.delegate as! AppDelegate
-        let viewController = NotesViewController()
-        let viewModel = NotesViewModel()
+        let dataManager = NotesDataManager(appDelegate: appDelegate)
+        let imageManager = ImageManager(appDelegate: appDelegate)
+        let viewController = NotesViewController(imageManager: imageManager)
+        let viewModel = NotesViewModel(notesDataManager: dataManager, router: router)
         viewController.viewModel = viewModel
         
         return viewController

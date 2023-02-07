@@ -9,13 +9,13 @@ import Foundation
 
 protocol CellModelProtocol {
     var title: String { get }
-    var image: String? { get }
+    var image: UUID? { get }
     var descriptionText: String? { get }
     var date: Date? { get }
 }
 
 struct Note: Codable {
-    var images: [NSRange: String]
+    var images: [NSRange: UUID]
     var title: String
     var descriptionText: String?
     var date: Date
@@ -27,7 +27,7 @@ struct Note: Codable {
 
 struct NoteCellModel: CellModelProtocol {
     var title: String
-    var image: String?
+    var image: UUID?
     var descriptionText: String?
     var date: Date?
     

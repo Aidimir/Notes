@@ -40,7 +40,7 @@ class NotesTableViewCell: UITableViewCell {
             label.font = .smallSizeFont
             label.textColor = .gray
             label.lineBreakMode = .byCharWrapping
-            let dateStr = model.date?.getFormattedDate(format: "MM-dd") ?? ""
+            let dateStr = model.date?.getFormattedDate(format: "dd MMMM") ?? ""
             label.text = dateStr + " " + (model.descriptionText ?? "")
             return label
         }()
@@ -51,7 +51,9 @@ class NotesTableViewCell: UITableViewCell {
             imgView.backgroundColor = .lightGray
             imgView.layer.cornerRadius = 20
             imgView.clipsToBounds = true
-            //            imgView.image = imageManager?.fetchImage(text: model.image)
+            if let imgId = model.image {
+                imgView.image = imageManager?.fetchImage(id: imgId)
+            }
             return imgView
         }()
         

@@ -11,7 +11,13 @@ import SnapKit
 import RxSwift
 import RxCocoa
 
-class NotesViewController: UIViewController {
+protocol NotesViewProtocol {
+    init(imageManager: ImageManagerProtocol)
+}
+
+class NotesViewController: UIViewController, NotesViewProtocol {
+    
+    private let imageManager: ImageManagerProtocol
     
     private enum Constants {
         static let horizontalPadding = 10
@@ -23,6 +29,12 @@ class NotesViewController: UIViewController {
     public var viewModel: NotesViewModel?
     
     private let tableView = UITableView()
+    
+    private let addButton: UIButton = {
+       let button = UIButton()
+        button.setImage(UIImage(systemName: "plus"), for: .normal)
+        return button
+    }()
     
     private let label: UILabel = {
         let label = UILabel()
@@ -48,29 +60,18 @@ class NotesViewController: UIViewController {
         
         searchField.delegate = self
         
-        tableView.separatorColor = .clear
-        
-        view.addSubview(label)
-        label.snp.makeConstraints { make in
-            make.left.equalTo(view.readableContentGuide.snp.left)
-            make.right.equalTo(view.readableContentGuide.snp.right)
-            make.top.equalTo(view.safeAreaLayoutGuide.snp.top)
-        }
-        
-        view.addSubview(searchField)
-        searchField.snp.makeConstraints { make in
-            make.left.right.equalTo(label)
-            make.height.equalTo(50)
-            make.top.equalTo(label.snp.bottom).offset(Constants.verticalPadding)
-        }
-        
-        view.addSubview(tableView)
-        tableView.snp.makeConstraints { make in
-            make.top.equalTo(searchField.snp.bottom).offset(Constants.verticalPadding)
-            make.left.right.bottom.equalToSuperview()
-        }
+        layloutSubviews()
         
         setBindings()
+    }
+    
+    required init(imageManager: ImageManagerProtocol) {
+        self.imageManager = imageManager
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
     
     private func setBindings() {
@@ -85,6 +86,36 @@ class NotesViewController: UIViewController {
         searchField.rx.text.orEmpty.throttle(.milliseconds(100), scheduler: MainScheduler()).subscribe { str in
             self.viewModel?.fetchDataByName(name: str)
         }.disposed(by: disposeBag)
+    }
+    
+    private func layloutSubviews() {
+        tableView.separatorColor = .clear
+        
+        view.addSubview(label)
+        label.snp.makeConstraints { make in
+            make.left.equalTo(view.readableContentGuide.snp.left)
+            make.width.equalTo(view.readableContentGuide.snp.width).multipliedBy(0.6)
+            make.top.equalTo(view.safeAreaLayoutGuide.snp.top)
+        }
+        
+        view.addSubview(addButton)
+        addButton.snp.makeConstraints { make in
+            make.right.equalTo(view.readableContentGuide.snp.right).offset(-Constants.horizontalPadding)
+            make.top.bottom.equalTo(label)
+        }
+        
+        view.addSubview(searchField)
+        searchField.snp.makeConstraints { make in
+            make.left.right.equalTo(view.readableContentGuide)
+            make.height.equalTo(50)
+            make.top.equalTo(label.snp.bottom).offset(Constants.verticalPadding)
+        }
+        
+        view.addSubview(tableView)
+        tableView.snp.makeConstraints { make in
+            make.top.equalTo(searchField.snp.bottom).offset(Constants.verticalPadding)
+            make.left.right.bottom.equalToSuperview()
+        }
     }
 }
 
@@ -101,7 +132,7 @@ extension NotesViewController: UITableViewDelegate {
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        //
+        viewModel?.didTapOnRow(indexPath: indexPath)
     }
     
     func tableView(_ tableView: UITableView, estimatedHeightForRowAt indexPath: IndexPath) -> CGFloat {
