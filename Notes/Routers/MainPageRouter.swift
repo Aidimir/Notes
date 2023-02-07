@@ -15,7 +15,7 @@ protocol RouterProtocol {
 protocol MainPageRouterProtocol: RouterProtocol {
     var builder: MainBuilderProtocol? { get set }
     func initStartViewController()
-    func moveToDetailViewController(data: Note)
+    func moveToDetailViewController(data: Note?)
     func popToRoot()
     func showAlert(title: String, error: Error?, msgWithError: String?, action: (() -> Void)?)
 }
@@ -38,7 +38,7 @@ class MainPageRouter: MainPageRouterProtocol {
         }
     }
     
-    func moveToDetailViewController(data: Note) {
+    func moveToDetailViewController(data: Note?) {
         if let navigationController = navigationController {
             guard let detailViewController = builder?.createDetailPage(data: data, router: self) else { return }
             navigationController.pushViewController(detailViewController, animated: true)

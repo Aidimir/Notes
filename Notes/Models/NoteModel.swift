@@ -30,11 +30,13 @@ struct NoteCellModel: CellModelProtocol {
     var image: UUID?
     var descriptionText: String?
     var date: Date?
+    var id: UUID
     
     init(note: Note) {
         self.title = note.title
         self.image = note.images.first?.value
         self.descriptionText = note.descriptionText
         self.date = note.date
+        self.id = note.id
     }
 }

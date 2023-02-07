@@ -31,7 +31,7 @@ class NotesViewController: UIViewController, NotesViewProtocol {
     private let tableView = UITableView()
     
     private let addButton: UIButton = {
-       let button = UIButton()
+        let button = UIButton()
         button.setImage(UIImage(systemName: "plus"), for: .normal)
         return button
     }()
@@ -60,6 +60,8 @@ class NotesViewController: UIViewController, NotesViewProtocol {
         
         searchField.delegate = self
         
+        addButton.addTarget(self, action: #selector(didTapOnAddButton), for: .touchUpInside)
+        
         layloutSubviews()
         
         setBindings()
@@ -83,8 +85,12 @@ class NotesViewController: UIViewController, NotesViewProtocol {
             cell.setup(model: element)
         }.disposed(by: disposeBag)
         
-        searchField.rx.text.orEmpty.throttle(.milliseconds(100), scheduler: MainScheduler()).subscribe { str in
+        searchField.rx.text.orEmpty.subscribe { str in
             self.viewModel?.fetchDataByName(name: str)
+        }.disposed(by: disposeBag)
+        
+        tableView.rx.itemDeleted.subscribe { index in
+            self.viewModel?.removeElement(indexPath: index)
         }.disposed(by: disposeBag)
     }
     
@@ -116,6 +122,14 @@ class NotesViewController: UIViewController, NotesViewProtocol {
             make.top.equalTo(searchField.snp.bottom).offset(Constants.verticalPadding)
             make.left.right.bottom.equalToSuperview()
         }
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        viewModel?.fetchItems()
+    }
+    
+    @objc private func didTapOnAddButton() {
+        viewModel?.didTapOnAddButton()
     }
 }
 

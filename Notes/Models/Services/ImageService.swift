@@ -12,16 +12,39 @@ import CoreData
 protocol ImageManagerProtocol: DataManagerProtocol {
     func fetchImage(id: UUID) -> UIImage?
     func saveImage(image: UIImage) -> UUID?
+    func fetchByDataOrSave(data: Data?) -> (UIImage?, UUID?)
     func removeImage(id: UUID)
 }
 
 class ImageManager: DataManager, ImageManagerProtocol {
+    
+    func fetchByDataOrSave(data: Data?) -> (UIImage?, UUID?) {
+        guard let data = data else { return (nil, nil) }
+        let context = appDelegate.persistentContainer.viewContext
+        let fetchRequest: NSFetchRequest<PhotoEntity> = PhotoEntity.fetchRequest()
+        var photoEntities: [PhotoEntity]? = nil
+        
+        do {
+            photoEntities = try context.fetch(fetchRequest)
+            if let photoEntities = photoEntities {
+                for i in photoEntities {
+                    if i.image == data {
+                        return (UIImage(data: data), i.id)
+                    }
+                }
+            }
+            
+            return (nil, nil)
+        } catch {
+            return (nil, nil)
+        }
+    }
     func removeImage(id: UUID) {
         let fetchRequest: NSFetchRequest<PhotoEntity>
         fetchRequest = PhotoEntity.fetchRequest()
         
         fetchRequest.predicate = NSPredicate(
-            format: "id LIKE %@", id.uuidString
+            format: "id == %@", id.uuidString
         )
         fetchRequest.includesPropertyValues = false
         
@@ -68,7 +91,7 @@ class ImageManager: DataManager, ImageManagerProtocol {
         
         let fetchRequest: NSFetchRequest<PhotoEntity> = PhotoEntity.fetchRequest()
         fetchRequest.predicate = NSPredicate(
-            format: "id LIKE %@", id.uuidString
+            format: "id == %@", id.uuidString
         )
         
         var photoEntity: PhotoEntity? = nil

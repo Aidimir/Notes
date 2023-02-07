@@ -32,7 +32,7 @@ class NotesDataManager: DataManager, NotesDataManagerProtocol {
         
         let fetchRequest: NSFetchRequest<NoteEntity> = NoteEntity.fetchRequest()
         fetchRequest.predicate = NSPredicate(
-            format: "id LIKE %@", id.uuidString
+            format: "id == %@", id.uuidString
         )
         
         var noteEntity: NoteEntity? = nil
@@ -90,18 +90,18 @@ class NotesDataManager: DataManager, NotesDataManagerProtocol {
                 print(error.localizedDescription)
             }
             return
-        }
-        
-        guard let entity = NSEntityDescription.entity(forEntityName: "NoteEntity", in: context) else { return }
-        let object = NoteEntity(entity: entity, insertInto: context)
-        object.noteObject = data.saveAsJsonData()
-        object.id = id
-        
-        do {
-            try context.save()
-        } catch let error as NSError {
-            print("Didn't save to core data")
-            print(error)
+        } else {
+            guard let entity = NSEntityDescription.entity(forEntityName: "NoteEntity", in: context) else { return }
+            let object = NoteEntity(entity: entity, insertInto: context)
+            object.noteObject = data.saveAsJsonData()
+            object.id = id
+            
+            do {
+                try context.save()
+            } catch let error as NSError {
+                print("Didn't save to core data")
+                print(error)
+            }
         }
     }
     
@@ -110,7 +110,7 @@ class NotesDataManager: DataManager, NotesDataManagerProtocol {
         fetchRequest = NoteEntity.fetchRequest()
         
         fetchRequest.predicate = NSPredicate(
-            format: "id LIKE %@", id.uuidString
+            format: "id == %@", id.uuidString
         )
         fetchRequest.includesPropertyValues = false
         
@@ -133,7 +133,7 @@ class NotesDataManager: DataManager, NotesDataManagerProtocol {
         
         let fetchRequest: NSFetchRequest<NoteEntity> = NoteEntity.fetchRequest()
         fetchRequest.predicate = NSPredicate(
-            format: "id LIKE %@", id.uuidString
+            format: "id == %@", id.uuidString
         )
         
         do {
