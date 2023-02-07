@@ -20,15 +20,12 @@ class ImagePickerViewController: NSObject, UIImagePickerControllerDelegate, UINa
     
     private let router: RouterProtocol
     
-    private let imagePicker = UIImagePickerController()
     
     public var chosenImages: BehaviorRelay<UIImage?> = BehaviorRelay(value: nil)
     
     required init(router: RouterProtocol) {
         self.router = router
         super.init()
-        imagePicker.delegate = self
-        imagePicker.allowsEditing = true
     }
     
     required init?(coder: NSCoder) {
@@ -58,18 +55,19 @@ class ImagePickerViewController: NSObject, UIImagePickerControllerDelegate, UINa
         alertViewController.addAction(libraryAction)
         alertViewController.addAction(cancelAction)
         
-        router.navigationController?.pushViewController(alertViewController, animated: true)
+        router.navigationController?.present(alertViewController, animated: true)
     }
     
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
         guard let pickedImage = info[UIImagePickerController.InfoKey.editedImage] as? UIImage else { return }
         chosenImages.accept(pickedImage)
-        router.navigationController?.popViewController(animated: true)
+        router.navigationController?.dismiss(animated: true)
     }
     
     private func getImagePicker(sourceType: UIImagePickerController.SourceType) -> UIImagePickerController {
         let imgPicker = UIImagePickerController()
         imgPicker.sourceType = sourceType
+        imgPicker.allowsEditing = true
         return imgPicker
     }
 }

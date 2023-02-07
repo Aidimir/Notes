@@ -80,14 +80,15 @@ class NotesViewModel: ContentViewModelProtocol {
                             descriptionText: "",
                             date: Date(),
                             text: "My first note",
-                            textParameters: [NSRange: TextParameter](),
+                            attributedText: nil,
+//                            textParameters: [NSRange: TextParameter](),
                             currentParameters: TextParameter(),
                             id: UUID())
-            
+
             notes.append(note)
             notesDataManager.saveData(data: note, id: note.id)
         } else {
-            notes = notesDataManager.fetchAllData()!
+            notes = notesDataManager.fetchAllData() ?? [Note]()
         }
         items.accept(notes.map(NoteCellModel.init))
     }

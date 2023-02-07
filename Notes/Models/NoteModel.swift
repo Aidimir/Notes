@@ -20,7 +20,8 @@ struct Note: Codable {
     var descriptionText: String?
     var date: Date
     var text: String
-    var textParameters: [NSRange: TextParameter]
+    var attributedText: Data? = nil
+//    var textParameters: [NSRange: TextParameter]
     var currentParameters: TextParameter
     var id: UUID
 }

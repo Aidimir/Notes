@@ -10,15 +10,18 @@ import RxRelay
 
 protocol DetailViewModelProtocol {
     var text: BehaviorRelay<String> { get }
-    var images: BehaviorRelay<[NSRange: UIImage]?> { get set }
+//    var images: BehaviorRelay<[NSRange: UIImage]?> { get set }
     //    var parameters: BehaviorRelay<[NSRange: TextParameter]>
+    var attributedStringData: BehaviorRelay<Data?> { get }
     func didTapOnReadyButton()
     init(notesDataManager: NotesDataManagerProtocol, router: MainPageRouterProtocol, note: Note?, imageManager: ImageManagerProtocol)
 }
 
 class DetailViewModel: DetailViewModelProtocol {
     
-    var images: RxRelay.BehaviorRelay<[NSRange: UIImage]?> = BehaviorRelay(value: nil)
+    var attributedStringData: RxRelay.BehaviorRelay<Data?> = BehaviorRelay(value: nil)
+    
+//    var images: RxRelay.BehaviorRelay<[NSRange: UIImage]?> = BehaviorRelay(value: nil)
     
     var text: RxRelay.BehaviorRelay<String> = BehaviorRelay(value: "")
     
@@ -32,12 +35,12 @@ class DetailViewModel: DetailViewModelProtocol {
     
     func didTapOnReadyButton() {
         var imgs = [NSRange: UUID]()
-        images.value?.forEach({ key, value in
-            let img = imageManager.fetchByDataOrSave(data: value.pngData())
-            if img.1 != nil {
-                imgs[key] = img.1
-            }
-        })
+//        images.value?.forEach({ key, value in
+//            let img = imageManager.fetchByDataOrSave(data: value.pngData())
+//            if img.1 != nil {
+//                imgs[key] = img.1
+//            }
+//        })
         
         let oldText = note?.text
         
@@ -48,12 +51,12 @@ class DetailViewModel: DetailViewModelProtocol {
             }
             var imgs = [NSRange: UUID]()
             
-            images.value?.forEach({ key, value in
-                let img = imageManager.fetchByDataOrSave(data: value.pngData())
-                if img.1 != nil {
-                    imgs[key] = img.1
-                }
-            })
+//            images.value?.forEach({ key, value in
+//                let img = imageManager.fetchByDataOrSave(data: value.pngData())
+//                if img.1 != nil {
+//                    imgs[key] = img.1
+//                }
+//            })
             
             note.images = imgs
             
@@ -62,6 +65,7 @@ class DetailViewModel: DetailViewModelProtocol {
             }
             
             note.text = text.value
+            note.attributedText = attributedStringData.value
             note.title = "NEW NOTE"
             note.descriptionText = text.value
             notesDataManager.saveData(data: note, id: note.id)
@@ -72,7 +76,8 @@ class DetailViewModel: DetailViewModelProtocol {
                             descriptionText: text.value,
                             date: Date(),
                             text: text.value,
-                            textParameters: [NSRange : TextParameter](),
+                            attributedText: attributedStringData.value,
+//                            textParameters: [NSRange : TextParameter](),
                             currentParameters: TextParameter(),
                             id: UUID())
                 
@@ -89,6 +94,7 @@ class DetailViewModel: DetailViewModelProtocol {
         
         if note != nil {
             text.accept(note?.text ?? "")
+            attributedStringData.accept(note?.attributedText)
         }
     }
 }

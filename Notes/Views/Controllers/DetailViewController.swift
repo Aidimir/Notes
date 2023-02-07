@@ -26,6 +26,8 @@ class DetailViewController: UIViewController, DetailViewProtocol {
     
     private var imagePickerController: ImagePickerProtocol
     
+    private var addImageButton: UIButton!
+    
     required init(imageManager: ImageManagerProtocol, imagePickerController: ImagePickerProtocol) {
         self.imageManager = imageManager
         self.imagePickerController = imagePickerController
@@ -50,7 +52,16 @@ class DetailViewController: UIViewController, DetailViewProtocol {
             let textView = UITextView()
             textView.backgroundColor = .white
             textView.text = viewModel?.text.value == nil ? "My first note !" : viewModel?.text.value
+            if let data = viewModel?.attributedStringData.value {
+                do {
+                    let attributedStr = try NSAttributedString(data: data, options: [.documentType: NSAttributedString.DocumentType.rtfd], documentAttributes: nil)
+                    textView.attributedText = attributedStr
+                } catch {
+                    print(error)
+                }
+            }
             textView.font = .mediumSizeBoldFont
+            textView.contentScaleFactor = 8
             textView.autocapitalizationType = .sentences
             textView.isSelectable = true
             textView.isEditable = true
@@ -59,27 +70,90 @@ class DetailViewController: UIViewController, DetailViewProtocol {
             textView.textAlignment = NSTextAlignment.justified
             return textView
         }()
+        prepareTextImages()
+        
+        addImageButton = {
+            let button = UIButton()
+            button.setImage(UIImage(systemName: "plus"), for: .normal)
+            button.addTarget(self, action: #selector(presentImagePicker), for: .touchUpInside)
+            return button
+        }()
+        
+        view.addSubview(addImageButton)
+        addImageButton.snp.makeConstraints { make in
+            make.bottom.equalTo(view.safeAreaLayoutGuide)
+            make.height.equalToSuperview().multipliedBy(0.1)
+            make.centerX.equalToSuperview()
+            make.width.equalToSuperview().multipliedBy(0.3)
+        }
         
         view.addSubview(textView)
         textView.snp.makeConstraints { make in
-            make.size.equalTo(view.safeAreaLayoutGuide)
+            make.width.left.right.top.equalTo(view.safeAreaLayoutGuide)
+            make.bottom.equalTo(addImageButton.snp.top)
         }
     }
     
     private func setBindings() {
         guard let viewModel = viewModel else { return }
         textView.rx.text.orEmpty.bind(to: viewModel.text).disposed(by: disposeBag)
+        
+        imagePickerController.chosenImages.filter({ $0 != nil }).subscribe { [weak self] image in
+            //            var oldValues = self?.viewModel?.images.value
+            //            oldValues?[self?.textView.selectedRange ?? NSRange()] = image!
+            let attributedString = NSMutableAttributedString(string: (self?.textView.text) ?? "")
+            let textAttachment = NSTextAttachment()
+            textAttachment.image = image.element!
+            
+            let oldWidth = textAttachment.image!.size.width;
+            
+            let scaleFactor = oldWidth / ((self?.textView.frame.size.width)!) - 10; //for the padding inside the textView
+            textAttachment.image = UIImage(cgImage: textAttachment.image!.cgImage!, scale: scaleFactor, orientation: .up)
+            let attrStringWithImage = NSAttributedString(attachment: textAttachment)
+            attributedString.replaceCharacters(in: (self?.textView.selectedRange)!, with: attrStringWithImage)
+            //            var range = self?.textView.selectedRange
+            //            range?.location = (range?.location ?? 0) + 1
+            //            attributedString.replaceCharacters(in: (self?.textView.selectedRange)! , with: attrStringWithImage)
+            self?.textView.attributedText = attributedString;
+            self?.textView.font = .mediumSizeBoldFont
+            //            self?.viewModel?.images.accept(oldValues)
+        }.disposed(by: disposeBag)
     }
     
     override func viewWillDisappear(_ animated: Bool) {
+        do {
+            let textData = try textView.attributedText.data(from: .init(location: 0, length: textView.attributedText.length), documentAttributes: [.documentType: NSAttributedString.DocumentType.rtfd])
+            viewModel?.attributedStringData.accept(textData)
+        } catch {
+            print(error)
+        }
         viewModel?.didTapOnReadyButton()
     }
     
     @objc private func presentImagePicker() {
+        imagePickerController.showImagePickerOptions()
+    }
+    
+    private func prepareTextImages() {
+        let width = CGRectGetWidth(self.view.frame)
+        textView.attributedText.enumerateAttribute(NSAttributedString.Key.attachment, in: NSRange(location: 0, length: textView!.attributedText.length), options: [], using: { [width] (object, range, pointer) in
+            let textViewAsAny: Any = self.textView!
+            if let attachment = object as? NSTextAttachment,
+               let img = attachment.image(forBounds: self.textView.bounds, textContainer: textViewAsAny as? NSTextContainer, characterIndex: range.location) {
+                if attachment.fileType == "public.png" {
+                    let aspect = img.size.width / img.size.height
+                    if img.size.width <= width {
+                        attachment.bounds = CGRect(x: 0, y: 0, width: img.size.width, height: img.size.height)
+                        return
+                    }
+                    let height = width / aspect
+                    attachment.bounds = CGRect(x: 0, y: 0, width: width, height: height)
+                }
+            }
+        })
     }
 }
 
-//let textView = UITextView(frame: CGRectMake(50, 50, 200, 300))
 //let attributedString = NSMutableAttributedString(string: "before after")
 //let textAttachment = NSTextAttachment()
 //textAttachment.image = UIImage(named: "sample_image.jpg")!
