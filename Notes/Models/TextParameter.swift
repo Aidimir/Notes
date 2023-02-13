@@ -10,6 +10,6 @@ import UIKit
 import CoreData
 
 public class TextParameter: Codable {
-    var fontName = "TimesNewRomanPS-ItalicMT"
-    var fontSize = 20
+    var fontName: String = "TimesNewRomanPS-ItalicMT"
+    var fontSize: CGFloat = 20
 }

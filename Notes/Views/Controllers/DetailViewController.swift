@@ -16,6 +16,12 @@ protocol DetailViewProtocol {
 
 class DetailViewController: UIViewController, DetailViewProtocol {
     
+    private var fontTextField: UITextField!
+    
+    private let allFonts = UIFont.allFontNames
+    
+    private var fontPickerView: UIPickerView!
+    
     private let disposeBag = DisposeBag()
     
     private var textView: UITextView!
@@ -49,7 +55,7 @@ class DetailViewController: UIViewController, DetailViewProtocol {
             let textView = UITextView()
             textView.backgroundColor = .white
             textView.text = viewModel?.text.value == nil ? "My first note !" : viewModel?.text.value
-            if let data = viewModel?.attributedStringData.value {
+            if let data = viewModel?.attributedStringData {
                 do {
                     let attributedStr = try NSAttributedString(data: data, options: [.documentType: NSAttributedString.DocumentType.rtfd], documentAttributes: nil)
                     textView.attributedText = attributedStr
@@ -57,7 +63,9 @@ class DetailViewController: UIViewController, DetailViewProtocol {
                     print(error)
                 }
             }
-            textView.font = .mediumSizeBoldFont
+            
+            let textParams = viewModel?.currentTextParameters ?? TextParameter()
+            textView.font = UIFont(name: textParams.fontName, size: textParams.fontSize)
             textView.contentScaleFactor = 8
             textView.autocapitalizationType = .sentences
             textView.isSelectable = true
@@ -67,6 +75,46 @@ class DetailViewController: UIViewController, DetailViewProtocol {
             textView.textAlignment = NSTextAlignment.justified
             return textView
         }()
+        
+        fontPickerView = {
+            let picker = UIPickerView()
+            picker.delegate = self
+            picker.dataSource = self
+            picker.frame = .zero
+            picker.backgroundColor = .white
+            return picker
+        }()
+        
+        fontTextField = {
+            let field = UITextField()
+            field.textColor = .black
+            field.adjustsFontSizeToFitWidth = true
+            field.text = viewModel?.currentTextParameters.fontName
+            field.textAlignment = .center
+            field.setLeftPaddingPoints(10)
+            field.setRightPaddingPoints(10)
+            field.textColor = .black
+            field.backgroundColor = .textFieldLightGray
+            field.layer.cornerRadius = 10
+            field.layer.masksToBounds = true
+            
+            let doneButton = UIBarButtonItem(title: "Done", style: UIBarButtonItem.Style.plain, target: self, action: #selector(confirmChangeFont))
+            let spaceButton = UIBarButtonItem(barButtonSystemItem: UIBarButtonItem.SystemItem.flexibleSpace, target: nil, action: nil)
+            let cancelButton = UIBarButtonItem(title: "Cancel", style: UIBarButtonItem.Style.plain, target: self, action: #selector(cancelEditing))
+            
+            let toolbar = UIToolbar()
+            toolbar.setItems([cancelButton, spaceButton, doneButton], animated: false)
+            toolbar.isUserInteractionEnabled = true
+            toolbar.backgroundColor = .white
+            toolbar.sizeToFit()
+            
+            field.inputView = fontPickerView
+            field.sizeToFit()
+            field.inputView?.sizeToFit()
+            field.inputAccessoryView = toolbar
+            return field
+        }()
+        
         prepareTextImages()
         
         addImageButton = {
@@ -75,6 +123,13 @@ class DetailViewController: UIViewController, DetailViewProtocol {
             button.addTarget(self, action: #selector(presentImagePicker), for: .touchUpInside)
             return button
         }()
+        
+        view.addSubview(fontTextField)
+        fontTextField.snp.makeConstraints { make in
+            make.right.top.equalTo(view.safeAreaLayoutGuide)
+            make.width.equalToSuperview().multipliedBy(0.3)
+            make.height.equalTo(50)
+        }
         
         view.addSubview(addImageButton)
         addImageButton.snp.makeConstraints { make in
@@ -86,7 +141,8 @@ class DetailViewController: UIViewController, DetailViewProtocol {
         
         view.addSubview(textView)
         textView.snp.makeConstraints { make in
-            make.width.left.right.top.equalTo(view.safeAreaLayoutGuide)
+            make.width.left.right.equalTo(view.safeAreaLayoutGuide)
+            make.top.equalTo(fontTextField.snp.bottom)
             make.bottom.equalTo(addImageButton.snp.top)
         }
     }
@@ -98,7 +154,7 @@ class DetailViewController: UIViewController, DetailViewProtocol {
         textView.rx.text.throttle(.milliseconds(500), scheduler: MainScheduler()).subscribe { str in
             viewModel.didTapOnReadyButton()
         }.disposed(by: disposeBag)
-
+        
         
         imagePickerController.chosenImages.filter({ $0 != nil }).subscribe { [weak self] image in
             guard let self = self else { return }
@@ -108,7 +164,7 @@ class DetailViewController: UIViewController, DetailViewProtocol {
             
             let oldWidth = textAttachment.image!.size.width;
             
-            let scaleFactor = oldWidth / (self.textView.frame.size.width); //for the padding inside the textView
+            let scaleFactor = oldWidth / (self.textView.frame.size.width)
             textAttachment.image = UIImage(cgImage: textAttachment.image!.cgImage!, scale: scaleFactor, orientation: .up)
             
             let aspect = textAttachment.image!.size.width / textAttachment.image!.size.height
@@ -117,7 +173,9 @@ class DetailViewController: UIViewController, DetailViewProtocol {
             let attrStringWithImage = NSAttributedString(attachment: textAttachment)
             attributedString.replaceCharacters(in: (self.textView.selectedRange), with: attrStringWithImage)
             self.textView.attributedText = attributedString;
-            self.textView.font = .mediumSizeBoldFont
+            let textParams = self.viewModel?.currentTextParameters ?? TextParameter()
+            self.textView.font = UIFont(name: textParams.fontName,
+                                        size: textParams.fontSize)
             self.setImageAsMain()
             self.textView.reloadInputViews()
         }.disposed(by: disposeBag)
@@ -126,7 +184,7 @@ class DetailViewController: UIViewController, DetailViewProtocol {
     override func viewWillDisappear(_ animated: Bool) {
         do {
             let textData = try textView.attributedText.data(from: .init(location: 0, length: textView.attributedText.length), documentAttributes: [.documentType: NSAttributedString.DocumentType.rtfd])
-            viewModel?.attributedStringData.accept(textData)
+            viewModel?.attributedStringData = textData
         } catch {
             print(error)
         }
@@ -167,5 +225,42 @@ class DetailViewController: UIViewController, DetailViewProtocol {
                 isFirst = true
             }
         }
+    }
+}
+
+extension DetailViewController: UIPickerViewDelegate, UIPickerViewDataSource {
+    func numberOfComponents(in pickerView: UIPickerView) -> Int {
+        return 1
+    }
+    
+    func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
+        return allFonts.count
+    }
+    
+    func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
+        fontTextField.text = allFonts[row]
+    }
+    
+    func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
+        return allFonts[row]
+    }
+    
+    @objc private func confirmChangeFont() {
+        viewModel?.currentTextParameters.fontName = allFonts[fontPickerView.selectedRow(inComponent: 0)]
+        
+        viewModel?.didTapOnReadyButton()
+        
+        let textParams = viewModel?.currentTextParameters ?? TextParameter()
+        textView.font = UIFont(name: textParams.fontName,
+                               size: textParams.fontSize)
+        
+        fontTextField.text = textView.font?.fontName
+        
+        view.endEditing(true)
+    }
+    
+    @objc private func cancelEditing() {
+        fontTextField.text = textView.font?.fontName
+        view.endEditing(true)
     }
 }

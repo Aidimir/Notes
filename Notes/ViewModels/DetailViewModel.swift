@@ -10,9 +10,8 @@ import RxRelay
 
 protocol DetailViewModelProtocol {
     var text: BehaviorRelay<String> { get }
-//    var images: BehaviorRelay<[NSRange: UIImage]?> { get set }
-    //    var parameters: BehaviorRelay<[NSRange: TextParameter]>
-    var attributedStringData: BehaviorRelay<Data?> { get }
+    var currentTextParameters: TextParameter { get set }
+    var attributedStringData: Data? { get set }
     var mainImage: Data? { get set }
     func didTapOnReadyButton()
     init(notesDataManager: NotesDataManagerProtocol, router: MainPageRouterProtocol, note: Note?, imageManager: ImageManagerProtocol)
@@ -20,7 +19,9 @@ protocol DetailViewModelProtocol {
 
 class DetailViewModel: DetailViewModelProtocol {
     
-    var attributedStringData: RxRelay.BehaviorRelay<Data?> = BehaviorRelay(value: nil)
+    var currentTextParameters: TextParameter = TextParameter()
+    
+    var attributedStringData: Data?
         
     var text: RxRelay.BehaviorRelay<String> = BehaviorRelay(value: "")
     
@@ -48,8 +49,9 @@ class DetailViewModel: DetailViewModelProtocol {
             }
             
             note.text = text.value
-            note.attributedText = attributedStringData.value
+            note.attributedText = attributedStringData
             note.title = text.value.firstNotEmptyLine ?? ""
+            note.currentParameters = currentTextParameters
             note.image = mainImage
             note.descriptionText = text.value.secondNotEmptyLine ?? ""
             notesDataManager.saveData(data: note, id: note.id)
@@ -59,9 +61,9 @@ class DetailViewModel: DetailViewModelProtocol {
                             descriptionText: text.value.secondNotEmptyLine ?? "",
                             date: Date(),
                             text: text.value,
-                            attributedText: attributedStringData.value,
+                            attributedText: attributedStringData,
                             image: mainImage,
-                            currentParameters: TextParameter(),
+                            currentParameters: currentTextParameters,
                             id: UUID())
                 
                 notesDataManager.saveData(data: note!, id: note!.id)
@@ -77,8 +79,9 @@ class DetailViewModel: DetailViewModelProtocol {
         self.mainImage = note?.image
         
         if note != nil {
+            self.currentTextParameters = note!.currentParameters
             text.accept(note?.text ?? "")
-            attributedStringData.accept(note?.attributedText)
+            attributedStringData = note?.attributedText
         }
     }
 }

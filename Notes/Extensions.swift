@@ -22,7 +22,7 @@ extension UIFont {
 
 extension UITextField {
     public func createStandartField() -> UITextField {
-        var standardField: UITextField = {
+        let standardField: UITextField = {
             let field = UITextField()
             field.placeholder = "..."
             field.textColor = .gray
@@ -101,12 +101,23 @@ extension String {
     var secondNotEmptyLine: String? {
         let first = firstNotEmptyLine
         var pattern = "^\\s*$"
-        print(self)
         for i in self.components(separatedBy: .newlines) {
             if !i.isEmpty && i != first{
                 return i
             }
         }
         return first
+    }
+}
+
+extension UIFont {
+    static var allFontNames: [String] {
+        var res = [String]()
+        for family in UIFont.familyNames {
+            for fontName in UIFont.fontNames(forFamilyName: family) {
+                res.append(fontName)
+            }
+        }
+        return res
     }
 }
