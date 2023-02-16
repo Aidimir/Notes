@@ -10,7 +10,7 @@ import CoreData
 
 protocol DataManagerProtocol {
     var appDelegate: AppDelegate { get }
-    func resetStorage()
+    func resetStorage() throws
     init(appDelegate: AppDelegate)
 }
 
@@ -18,7 +18,7 @@ class DataManager: DataManagerProtocol {
     
     var appDelegate: AppDelegate
     
-    final func resetStorage() {
+    final func resetStorage() throws {
         let storeContainer = appDelegate.persistentContainer.persistentStoreCoordinator
         
         for store in storeContainer.persistentStores {
@@ -29,7 +29,7 @@ class DataManager: DataManagerProtocol {
                     options: nil
                 )
             } catch {
-                print("didn't reset core data")
+                throw error
             }
         }
         

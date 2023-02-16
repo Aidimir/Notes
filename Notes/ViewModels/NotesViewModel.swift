@@ -9,7 +9,11 @@ import Foundation
 import RxRelay
 import RxSwift
 
-protocol ContentViewModelProtocol {
+protocol ViewModelProtocol {
+    func errorHandler(error: Error)
+}
+
+protocol ContentViewModelProtocol: ViewModelProtocol {
     var items: BehaviorRelay<[CellModelProtocol]> { get }
     func removeElement(indexPath: IndexPath)
     func fetchDataByName(name: String)
@@ -30,17 +34,14 @@ class NotesViewModel: ContentViewModelProtocol {
     private let notesDataManager: NotesDataManagerProtocol
     
     public func fetchDataByName(name: String) {
-        if name.isEmpty {
-            fetchItems()
-        } else {
-            items.accept(fetchFilteredData(name: name))
-        }
+        items.accept(fetchFilteredData(name: name))
     }
     
     private func fetchFilteredData(name: String) -> [NoteCellModel] {
         var res = [NoteCellModel]()
         res = notes.filter { model in
-            if model.title.lowercased().contains(name.lowercased()) || ((model.descriptionText?.lowercased().contains(name.lowercased())) ?? false) {
+            if model.title.lowercased().contains(name.lowercased()) ||
+                ((model.descriptionText?.lowercased().contains(name.lowercased())) ?? false) {
                 return true
             }
             return false
@@ -67,28 +68,29 @@ class NotesViewModel: ContentViewModelProtocol {
     func removeElement(indexPath: IndexPath) {
         var neededCell = items.value[indexPath.row] as! NoteCellModel
         let neededNote = notes.filter({ $0.id == neededCell.id }).first
-        notesDataManager.removeData(id: neededNote!.id)
+        do {
+            try notesDataManager.removeData(id: neededNote!.id)
+        } catch {
+            errorHandler(error: error)
+        }
         notes.removeAll(where: { $0.id == neededNote?.id })
         items.accept(notes.map(NoteCellModel.init))
     }
     
     func fetchItems() {
-        let dMAllData = notesDataManager.fetchAllData()
-        if dMAllData?.isEmpty ?? true || dMAllData == nil {
-            let note = Note(title: "My first note",
-                            descriptionText: "",
-                            date: Date(),
-                            text: "My first note",
-                            attributedText: nil,
-//                            textParameters: [NSRange: TextParameter](),
-                            currentParameters: TextParameter(),
-                            id: UUID())
-
-            notes.append(note)
-            notesDataManager.saveData(data: note, id: note.id)
-        } else {
-            notes = notesDataManager.fetchAllData() ?? [Note]()
+        do {
+            notes = try notesDataManager.fetchAllData()
+        } catch {
+            errorHandler(error: error)
         }
+        
         items.accept(notes.map(NoteCellModel.init))
+    }
+    
+    func errorHandler(error: Error) {
+        router.showAlert(title: "Error",
+                         error: error,
+                         msgWithError: nil,
+                         action: nil)
     }
 }

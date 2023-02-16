@@ -10,15 +10,15 @@ import UIKit
 import CoreData
 
 protocol ImageManagerProtocol: DataManagerProtocol {
-    func fetchImage(id: UUID) -> UIImage?
-    func saveImage(image: UIImage) -> UUID?
-    func fetchByDataOrSave(data: Data?) -> (UIImage?, UUID?)
-    func removeImage(id: UUID)
+    func fetchImage(id: UUID) throws -> UIImage?
+    func saveImage(image: UIImage) throws -> UUID?
+    func fetchByDataOrSave(data: Data?) throws -> (UIImage?, UUID?)
+    func removeImage(id: UUID) throws
 }
 
 class ImageManager: DataManager, ImageManagerProtocol {
     
-    func fetchByDataOrSave(data: Data?) -> (UIImage?, UUID?) {
+    func fetchByDataOrSave(data: Data?) throws -> (UIImage?, UUID?) {
         guard let data = data else { return (nil, nil) }
         let context = appDelegate.persistentContainer.viewContext
         let fetchRequest: NSFetchRequest<PhotoEntity> = PhotoEntity.fetchRequest()
@@ -36,10 +36,11 @@ class ImageManager: DataManager, ImageManagerProtocol {
             
             return (nil, nil)
         } catch {
-            return (nil, nil)
+            throw error
         }
     }
-    func removeImage(id: UUID) {
+    
+    func removeImage(id: UUID) throws {
         let fetchRequest: NSFetchRequest<PhotoEntity>
         fetchRequest = PhotoEntity.fetchRequest()
         
@@ -57,13 +58,12 @@ class ImageManager: DataManager, ImageManagerProtocol {
                 context.delete(object!)
                 try context.save()
             }
-        } catch let error {
-            print("didn't reset core data")
-            print(error)
+        } catch {
+            throw error
         }
     }
     
-    func saveImage(image: UIImage) -> UUID? {
+    func saveImage(image: UIImage) throws -> UUID? {
         let context = appDelegate.persistentContainer.viewContext
         let id = UUID()
         
@@ -78,15 +78,14 @@ class ImageManager: DataManager, ImageManagerProtocol {
         
         do {
             try context.save()
-        } catch let error as NSError {
-            print("Didn't save to core data")
-            print(error)
+        } catch {
+            throw error
         }
         
         return id
     }
     
-    func fetchImage(id: UUID) -> UIImage? {
+    func fetchImage(id: UUID) throws -> UIImage? {
         let context = appDelegate.persistentContainer.viewContext
         
         let fetchRequest: NSFetchRequest<PhotoEntity> = PhotoEntity.fetchRequest()
@@ -107,7 +106,7 @@ class ImageManager: DataManager, ImageManagerProtocol {
             return nil
         }
         catch {
-            return nil
+            throw error
         }
     }
 }

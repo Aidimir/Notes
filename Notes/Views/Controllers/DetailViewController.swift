@@ -60,7 +60,7 @@ class DetailViewController: UIViewController, DetailViewProtocol {
                     let attributedStr = try NSAttributedString(data: data, options: [.documentType: NSAttributedString.DocumentType.rtfd], documentAttributes: nil)
                     textView.attributedText = attributedStr
                 } catch {
-                    print(error)
+                    viewModel?.errorHandler(error: error)
                 }
             }
             
@@ -186,7 +186,7 @@ class DetailViewController: UIViewController, DetailViewProtocol {
             let textData = try textView.attributedText.data(from: .init(location: 0, length: textView.attributedText.length), documentAttributes: [.documentType: NSAttributedString.DocumentType.rtfd])
             viewModel?.attributedStringData = textData
         } catch {
-            print(error)
+            viewModel?.errorHandler(error: error)
         }
         viewModel?.didTapOnReadyButton()
     }

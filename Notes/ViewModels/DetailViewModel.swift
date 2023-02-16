@@ -8,7 +8,7 @@
 import Foundation
 import RxRelay
 
-protocol DetailViewModelProtocol {
+protocol DetailViewModelProtocol: ViewModelProtocol {
     var text: BehaviorRelay<String> { get }
     var currentTextParameters: TextParameter { get set }
     var attributedStringData: Data? { get set }
@@ -36,39 +36,43 @@ class DetailViewModel: DetailViewModelProtocol {
     private var note: Note?
     
     func didTapOnReadyButton() {
-        let oldText = note?.text
         
-        if var note = note {
-            if text.value.isEmpty {
-                notesDataManager.removeData(id: note.id)
-                return 
-            }
-            
-            if note.text != oldText {
-                note.date = Date()
-            }
-            
-            note.text = text.value
-            note.attributedText = attributedStringData
-            note.title = text.value.firstNotEmptyLine ?? ""
-            note.currentParameters = currentTextParameters
-            note.image = mainImage
-            note.descriptionText = text.value.secondNotEmptyLine ?? ""
-            notesDataManager.saveData(data: note, id: note.id)
-        } else {
-            if !text.value.isEmpty {
-                note = Note(title: text.value.firstNotEmptyLine ?? "",
-                            descriptionText: text.value.secondNotEmptyLine ?? "",
-                            date: Date(),
-                            text: text.value,
-                            attributedText: attributedStringData,
-                            image: mainImage,
-                            currentParameters: currentTextParameters,
-                            id: UUID())
+        do {
+            if var note = note {
+                if text.value.isEmpty {
+                    try notesDataManager.removeData(id: note.id)
+                    return
+                }
                 
-                notesDataManager.saveData(data: note!, id: note!.id)
+                note.text = text.value
+                note.attributedText = attributedStringData
+                note.title = text.value.firstNotEmptyLine ?? ""
+                note.currentParameters = currentTextParameters
+                note.image = mainImage
+                note.descriptionText = text.value.secondNotEmptyLine ?? ""
+                try notesDataManager.saveData(data: note, id: note.id)
+            } else {
+                    note = Note(title: text.value.firstNotEmptyLine ?? "",
+                                descriptionText: text.value.secondNotEmptyLine ?? "",
+                                date: Date(),
+                                text: text.value,
+                                attributedText: attributedStringData,
+                                image: mainImage,
+                                currentParameters: currentTextParameters,
+                                id: UUID())
+                    
+                    try notesDataManager.saveData(data: note!, id: note!.id)
             }
+        } catch {
+            errorHandler(error: error)
         }
+    }
+    
+    func errorHandler(error: Error) {
+        router.showAlert(title: "Error",
+                         error: error,
+                         msgWithError: nil,
+                         action: nil)
     }
     
     required init(notesDataManager: NotesDataManagerProtocol, router: MainPageRouterProtocol, note: Note?, imageManager: ImageManagerProtocol) {

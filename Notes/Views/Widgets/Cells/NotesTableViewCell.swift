@@ -19,9 +19,9 @@ class NotesTableViewCell: UITableViewCell {
     
     private var titleLabel: UILabel!
     
-    private var descriptionLabel: UILabel!
+    private var descriptionLabel: UILabel?
     
-    private var cellImageView: UIImageView!
+    private var cellImageView: UIImageView?
     
     public func setup(model: CellModelProtocol, imageManager: ImageManagerProtocol? = nil) {
         titleLabel = {
@@ -34,46 +34,50 @@ class NotesTableViewCell: UITableViewCell {
             return label
         }()
         
-        descriptionLabel = {
-            let label = UILabel()
-            label.textAlignment = .left
-            label.font = .smallSizeFont
-            label.textColor = .gray
-            label.lineBreakMode = .byCharWrapping
-            let dateStr = model.date?.getFormattedDate(format: "dd MMMM YYYY") ?? ""
-            label.text = dateStr + " " + (model.descriptionText ?? "")
-            return label
-        }()
-        
-        cellImageView = {
-            let imgView = UIImageView()
-            imgView.contentMode = .scaleAspectFill
-            imgView.backgroundColor = .lightGray
-            imgView.layer.cornerRadius = 20
-            imgView.clipsToBounds = true
-            if let imgData = model.image {
-                imgView.image = UIImage(data: imgData)
-            }
-            return imgView
-        }()
-        
         contentView.addSubview(titleLabel)
         titleLabel.snp.makeConstraints { make in
             make.left.top.equalToSuperview()
             make.width.equalToSuperview().multipliedBy(0.8)
         }
         
-        contentView.addSubview(descriptionLabel)
-        descriptionLabel.snp.makeConstraints { make in
-            make.left.right.equalTo(titleLabel)
-            make.top.equalTo(titleLabel.snp.bottom).offset(Constants.verticalPadding)
-            make.bottom.equalToSuperview()
+        if model.descriptionText != nil {
+            descriptionLabel = {
+                let label = UILabel()
+                label.textAlignment = .left
+                label.font = .smallSizeFont
+                label.textColor = .gray
+                label.lineBreakMode = .byCharWrapping
+                let dateStr = model.date?.getFormattedDate(format: "dd MMMM YYYY") ?? ""
+                label.text = dateStr + " " + (model.descriptionText ?? "")
+                return label
+            }()
+            
+            contentView.addSubview(descriptionLabel!)
+            descriptionLabel!.snp.makeConstraints { make in
+                make.left.right.equalTo(titleLabel)
+                make.top.equalTo(titleLabel.snp.bottom).offset(Constants.verticalPadding)
+                make.bottom.equalToSuperview()
+            }
         }
         
-        contentView.addSubview(cellImageView)
-        cellImageView.snp.makeConstraints { make in
-            make.left.equalTo(titleLabel.snp.right).offset(Constants.horizontalPadding)
-            make.top.bottom.right.equalToSuperview()
+        if model.image != nil {
+            cellImageView = {
+                let imgView = UIImageView()
+                imgView.contentMode = .scaleAspectFill
+                imgView.backgroundColor = .lightGray
+                imgView.layer.cornerRadius = 20
+                imgView.clipsToBounds = true
+                if let imgData = model.image {
+                    imgView.image = UIImage(data: imgData)
+                }
+                return imgView
+            }()
+            
+            contentView.addSubview(cellImageView!)
+            cellImageView!.snp.makeConstraints { make in
+                make.left.equalTo(titleLabel.snp.right).offset(Constants.horizontalPadding)
+                make.top.bottom.right.equalToSuperview()
+            }
         }
     }
     
@@ -84,9 +88,12 @@ class NotesTableViewCell: UITableViewCell {
     
     override func prepareForReuse() {
         titleLabel.removeFromSuperview()
-        cellImageView.removeFromSuperview()
-        descriptionLabel.removeFromSuperview()
+        cellImageView?.removeFromSuperview()
+        descriptionLabel?.removeFromSuperview()
+        
+        titleLabel = nil
+        cellImageView = nil
+        descriptionLabel = nil
         super.prepareForReuse()
     }
 }
-

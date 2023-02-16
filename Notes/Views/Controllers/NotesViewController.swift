@@ -86,7 +86,11 @@ class NotesViewController: UIViewController, NotesViewProtocol {
         }.disposed(by: disposeBag)
         
         searchField.rx.text.orEmpty.subscribe { str in
-            self.viewModel?.fetchDataByName(name: str)
+            if str.isEmpty {
+                self.viewModel?.fetchItems()
+            } else {
+                self.viewModel?.fetchDataByName(name: str)
+            }
         }.disposed(by: disposeBag)
         
         tableView.rx.itemDeleted.subscribe { index in
