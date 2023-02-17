@@ -167,8 +167,8 @@ class DetailViewController: UIViewController, DetailViewProtocol {
             let scaleFactor = oldWidth / (self.textView.frame.size.width)
             textAttachment.image = UIImage(cgImage: textAttachment.image!.cgImage!, scale: scaleFactor, orientation: .up)
             
-            let aspect = textAttachment.image!.size.width / textAttachment.image!.size.height
-            textAttachment.bounds = CGRect(x: 0, y: 0, width: self.view.frame.width, height: self.view.frame.width / aspect )
+            let aspect = image!.size.width / image!.size.height
+            textAttachment.bounds = CGRect(x: 0, y: 0, width: self.view.frame.width / 2, height: self.textView.frame.width / aspect )
             
             let attrStringWithImage = NSAttributedString(attachment: textAttachment)
             attributedString.replaceCharacters(in: (self.textView.selectedRange), with: attrStringWithImage)
@@ -182,12 +182,7 @@ class DetailViewController: UIViewController, DetailViewProtocol {
     }
     
     override func viewWillDisappear(_ animated: Bool) {
-        do {
-            let textData = try textView.attributedText.data(from: .init(location: 0, length: textView.attributedText.length), documentAttributes: [.documentType: NSAttributedString.DocumentType.rtfd])
-            viewModel?.attributedStringData = textData
-        } catch {
-            viewModel?.errorHandler(error: error)
-        }
+        saveAttributedStringData()
         viewModel?.didTapOnReadyButton()
     }
     
@@ -196,7 +191,7 @@ class DetailViewController: UIViewController, DetailViewProtocol {
     }
     
     private func prepareTextImages() {
-        let width = CGRectGetWidth(self.view.frame)
+        let width = CGRectGetWidth(self.view.frame) / 2
         
         setImageAsMain()
         
@@ -224,6 +219,18 @@ class DetailViewController: UIViewController, DetailViewProtocol {
                 viewModel?.mainImage = img.pngData()
                 isFirst = true
             }
+        }
+        if !isFirst {
+            viewModel?.mainImage = nil
+        }
+    }
+    
+    private func saveAttributedStringData() {
+        do {
+            let textData = try textView.attributedText.data(from: .init(location: 0, length: textView.attributedText.length), documentAttributes: [.documentType: NSAttributedString.DocumentType.rtfd])
+            viewModel?.attributedStringData = textData
+        } catch {
+            viewModel?.errorHandler(error: error)
         }
     }
 }

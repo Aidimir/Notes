@@ -39,7 +39,7 @@ class DetailViewModel: DetailViewModelProtocol {
         
         do {
             if var note = note {
-                if text.value.isEmpty {
+                if text.value.isEmpty && mainImage == nil {
                     try notesDataManager.removeData(id: note.id)
                     return
                 }
